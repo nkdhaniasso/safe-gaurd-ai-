@@ -74,6 +74,11 @@ const App: React.FC = () => {
     }
   };
 
+  const handleOpenReport = (report: AuditReport) => {
+    setAuditData(report);
+    setCurrentView('report');
+  };
+
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -109,7 +114,7 @@ const App: React.FC = () => {
       case 'fraud-suggestions': return <FraudSuggestions />;
       case 'spam-defense': return <SpamDefense />;
       case 'audit': return <VulnerabilityScanner />;
-      case 'audit-history': return <HistoryView onViewReport={(r) => { setAuditData(r); setCurrentView('report'); }} />;
+      case 'audit-history': return <HistoryView onViewReport={handleOpenReport} />;
       case 'incident-report': return <IncidentReporter onComplete={() => setCurrentView('dashboard')} language={selectedLanguage} />;
       case 'report': return auditData ? <AuditReportView report={auditData} /> : <Dashboard onViewChange={setCurrentView} />;
       default: return <Dashboard onViewChange={setCurrentView} />;
@@ -117,7 +122,12 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout activeView={currentView} onViewChange={setCurrentView} onLogout={handleLogout}>
+    <Layout 
+      activeView={currentView} 
+      onViewChange={setCurrentView} 
+      onLogout={handleLogout}
+      onOpenReport={handleOpenReport}
+    >
       {renderContent()}
     </Layout>
   );

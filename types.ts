@@ -62,4 +62,13 @@ export interface IncidentData {
   feedback?: string;
 }
 
+export interface SearchResult {
+  id: string;
+  title: string;
+  type: 'module' | 'report' | 'action' | 'ai_suggest';
+  description: string;
+  view?: ViewState;
+  metadata?: any;
+}
+
 export type ViewState = 'login' | 'dashboard' | 'survey' | 'audit' | 'report' | 'loading' | 'incident-report' | 'spam-defense' | 'audit-history' | 'fraud-suggestions';

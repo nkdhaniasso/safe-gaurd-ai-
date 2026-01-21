@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { SurveyData, AuditReport, IncidentData } from "../types";
+import { SurveyData, AuditReport, IncidentData, SearchResult } from "../types";
 
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -62,6 +62,34 @@ export const generateSecurityReport = async (survey: SurveyData): Promise<AuditR
     id: `audit-${Date.now()}`,
     timestamp: new Date().toISOString()
   };
+};
+
+export const smartSearchSuggestions = async (query: string): Promise<SearchResult[]> => {
+  const ai = getAI();
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `Act as a security OS command palette. Based on the search query: "${query}", suggest 2-3 specific security modules or actions in CyberGuard Pro.
+    Valid module views: dashboard, survey, audit, incident-report, spam-defense, fraud-suggestions.
+    Return JSON array of SearchResult objects.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            id: { type: Type.STRING },
+            title: { type: Type.STRING },
+            type: { type: Type.STRING, description: "always 'ai_suggest'" },
+            description: { type: Type.STRING },
+            view: { type: Type.STRING }
+          },
+          required: ["id", "title", "type", "description", "view"]
+        }
+      }
+    }
+  });
+  return JSON.parse(response.text.trim());
 };
 
 export const analyzeSpam = async (content: string): Promise<{ risk: 'CLEAN' | 'SUSPICIOUS' | 'SCAM', advice: string, reasoning: string }> => {

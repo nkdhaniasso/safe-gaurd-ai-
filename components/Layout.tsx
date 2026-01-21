@@ -1,17 +1,20 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Icons } from '../constants';
-import { ViewState } from '../types';
+import { ViewState, AuditReport } from '../types';
+import GlobalSearch from './GlobalSearch';
 
 interface LayoutProps {
   children: React.ReactNode;
   activeView: ViewState;
   onViewChange: (view: ViewState) => void;
   onLogout: () => void;
+  onOpenReport?: (report: AuditReport) => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeView, onViewChange, onLogout }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeView, onViewChange, onLogout, onOpenReport }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
@@ -22,6 +25,17 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onViewChange, onL
     { id: 'audit', label: 'Vulnerability Scan', icon: Icons.Shield },
     { id: 'audit-history', label: 'Audit History', icon: Icons.Server },
   ];
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,6 +49,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onViewChange, onL
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-100 animate-in fade-in duration-1000">
+      <GlobalSearch 
+        isOpen={isSearchOpen} 
+        onClose={() => setIsSearchOpen(false)} 
+        onViewChange={onViewChange}
+        onOpenReport={onOpenReport}
+      />
+      
       <aside className="w-64 glass border-r border-slate-800 flex flex-col hidden md:flex">
         <div className="p-6 flex items-center gap-3">
           <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20">
@@ -76,11 +97,25 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onViewChange, onL
       </aside>
 
       <main className="flex-1 flex flex-col overflow-auto bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-950 to-slate-950">
-        <header className="h-16 glass sticky top-0 z-30 flex items-center justify-between px-8 border-b border-slate-800/50">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Session</span>
-            <Icons.ChevronRight />
-            <span className="text-slate-100 font-bold capitalize text-sm tracking-tight">{activeView.replace('-', ' ')}</span>
+        <header className="h-20 glass sticky top-0 z-30 flex items-center justify-between px-8 border-b border-slate-800/50 backdrop-blur-3xl">
+          <div className="flex items-center gap-6 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-[10px] font-black uppercase tracking-wider">Node</span>
+              <Icons.ChevronRight className="scale-75 opacity-30" />
+              <span className="text-slate-100 font-black capitalize text-xs tracking-tight">{activeView.replace('-', ' ')}</span>
+            </div>
+
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="max-w-md w-full flex items-center gap-4 px-5 py-2.5 bg-slate-900/50 hover:bg-slate-900 border border-slate-800 rounded-2xl text-slate-500 transition-all group"
+            >
+              <Icons.Search />
+              <span className="flex-1 text-left text-xs font-medium">Search interface or ask AI...</span>
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-950 rounded-lg border border-slate-800 text-[9px] font-black group-hover:text-blue-400 transition-colors">
+                <Icons.Command />
+                <span>K</span>
+              </div>
+            </button>
           </div>
           
           <div className="flex items-center gap-6 relative" ref={dropdownRef}>
@@ -92,25 +127,25 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onViewChange, onL
                 <p className="text-xs font-bold text-slate-200">Admin Mode</p>
                 <p className="text-[10px] text-emerald-500 font-medium">Verified</p>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 border border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/10 transform active:scale-95 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 border border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/10 transform active:scale-95 transition-transform">
                 <span className="text-xs font-bold text-white">CP</span>
               </div>
             </button>
 
             {isProfileOpen && (
-              <div className="absolute top-full right-0 mt-2 w-72 glass border border-slate-800 rounded-[2rem] shadow-2xl p-6 z-50 animate-in fade-in zoom-in-95 duration-200">
-                <div className="flex flex-col items-center text-center space-y-3 mb-6">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-2xl font-bold">CP</div>
+              <div className="absolute top-full right-0 mt-3 w-72 glass border border-slate-800 rounded-[2.5rem] shadow-2xl p-8 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex flex-col items-center text-center space-y-4 mb-8">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl font-bold shadow-xl">CP</div>
                   <div>
-                    <h3 className="font-bold text-sm">Enterprise Account</h3>
-                    <p className="text-slate-500 text-[10px]">active-node-01@cyberguard.pro</p>
+                    <h3 className="font-black text-sm uppercase tracking-tight">Enterprise Node 01</h3>
+                    <p className="text-slate-500 text-[10px] font-medium mt-1">active-uplink@cyberguard.pro</p>
                   </div>
                 </div>
 
-                <div className="mt-6 flex flex-col gap-2">
-                  <button onClick={() => onViewChange('audit-history')} className="w-full text-left px-4 py-2 hover:bg-slate-800 rounded-xl text-xs transition-colors">Audit History</button>
-                  <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 py-3 bg-rose-950/20 hover:bg-rose-950/40 text-rose-400 border border-rose-500/30 rounded-2xl text-xs font-bold transition-all group">
-                    Sign out
+                <div className="space-y-2">
+                  <button onClick={() => { onViewChange('audit-history'); setIsProfileOpen(false); }} className="w-full text-left px-5 py-3 hover:bg-slate-800 rounded-xl text-xs font-bold text-slate-300 transition-colors">Audit History Ledger</button>
+                  <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 py-4 bg-rose-950/20 hover:bg-rose-950/40 text-rose-400 border border-rose-500/30 rounded-2xl text-[10px] font-black tracking-widest transition-all group mt-4 uppercase">
+                    Terminate Session
                   </button>
                 </div>
               </div>
@@ -118,7 +153,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onViewChange, onL
           </div>
         </header>
         
-        <div className="p-8 max-w-7xl mx-auto w-full">
+        <div className="p-10 max-w-7xl mx-auto w-full">
           {children}
         </div>
       </main>
