@@ -1,0 +1,9 @@
+{
+  "name": "CyberGuard Pro AI",
+  "description": "Enterprise-grade cybersecurity auditing and threat intelligence platform powered by Gemini 3 Pro. Features deep infrastructure surveys, real-time risk assessment, and personalized security roadmaps.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
